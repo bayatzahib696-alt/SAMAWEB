@@ -5,9 +5,9 @@ import { Stethoscope, Video, FileText, Calendar, ShieldCheck, UserCog } from "lu
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Afghan Telehealth — Connect with doctors online" },
+      { title: "SAMA — Connect with doctors online" },
       { name: "description", content: "Book online doctor consultations across Afghanistan. Video visits, digital prescriptions, and trusted care in AFN." },
-      { property: "og:title", content: "Afghan Telehealth" },
+      { property: "og:title", content: "SAMA" },
       { property: "og:description", content: "Online doctor consultations for Afghanistan." },
     ],
   }),
@@ -23,7 +23,7 @@ function Landing() {
             <div className="grid h-9 w-9 place-items-center rounded-lg gradient-medical">
               <Stethoscope className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold tracking-tight">Afghan Telehealth</span>
+            <span className="text-lg font-bold tracking-tight">SAMA</span>
           </Link>
           <div className="hidden gap-2 sm:flex">
             <Button asChild variant="ghost"><Link to="/auth/admin">Admin</Link></Button>
@@ -111,7 +111,7 @@ function Landing() {
       <footer className="border-t bg-card">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Stethoscope className="h-4 w-4" /> Afghan Telehealth © {new Date().getFullYear()}
+            <Stethoscope className="h-4 w-4" /> SAMA © {new Date().getFullYear()}
           </div>
           <div className="text-xs text-muted-foreground">Built for the Afghanistan market. Currency: AFN.</div>
         </div>
@@ -142,3 +142,4 @@ function Feature({ icon: Icon, title, desc }: { icon: typeof Calendar; title: st
     </div>
   );
 }
+

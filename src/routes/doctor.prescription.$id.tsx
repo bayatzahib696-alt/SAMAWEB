@@ -117,3 +117,4 @@ function Medical({ label, value, urgent = false }: { label: string; value?: stri
     </div>
   );
 }
+

@@ -78,16 +78,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "telehealth" },
-      { name: "description", content: "Afghan Telehealth connects patients with doctors for remote video consultations and prescription summaries." },
+      { title: "SAMA" },
+      { name: "description", content: "SAMA connects patients with doctors for remote video consultations and prescription summaries." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "telehealth" },
-      { property: "og:description", content: "Afghan Telehealth connects patients with doctors for remote video consultations and prescription summaries." },
+      { property: "og:title", content: "SAMA" },
+      { property: "og:description", content: "SAMA connects patients with doctors for remote video consultations and prescription summaries." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "telehealth" },
-      { name: "twitter:description", content: "Afghan Telehealth connects patients with doctors for remote video consultations and prescription summaries." },
+      { name: "twitter:title", content: "SAMA" },
+      { name: "twitter:description", content: "SAMA connects patients with doctors for remote video consultations and prescription summaries." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/351e3a57-e39d-46b5-8fac-145d3d9925c6/id-preview-a9c461bb--93188623-ef09-4703-84b4-b04657a194a4.lovable.app-1781017545183.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/351e3a57-e39d-46b5-8fac-145d3d9925c6/id-preview-a9c461bb--93188623-ef09-4703-84b4-b04657a194a4.lovable.app-1781017545183.png" },
     ],
@@ -128,3 +128,5 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
+

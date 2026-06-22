@@ -27,3 +27,4 @@ export const statusColor: Record<string, string> = {
   paid: "bg-success/15 text-success border-success/40",
   refunded: "bg-muted text-muted-foreground border-border",
 };
+

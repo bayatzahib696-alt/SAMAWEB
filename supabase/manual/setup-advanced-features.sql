@@ -1,4 +1,4 @@
--- AFGHAN HEALTHEASE CONNECT - ADVANCED MVP DATABASE SETUP
+-- SAMA - ADVANCED MVP DATABASE SETUP
 -- Use this in Supabase SQL Editor after creating your Supabase project.
 -- It creates/updates tables for: doctor profile banners, patient allergies,
 -- doctor posts, doctor reviews, and doctor communication with labs/pharmacy/clinic/admin.

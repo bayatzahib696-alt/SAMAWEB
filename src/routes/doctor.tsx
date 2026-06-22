@@ -18,3 +18,4 @@ export const Route = createFileRoute("/doctor")({
     </AppShell>
   ),
 });
+

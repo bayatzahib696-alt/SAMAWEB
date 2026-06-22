@@ -57,3 +57,4 @@ on conflict (user_id, role) do nothing;
 ```
 
 Then log in from `/auth/admin`.
+

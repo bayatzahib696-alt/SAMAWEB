@@ -1,4 +1,4 @@
--- Afghan Telehealth: working Supabase Auth setup for Lovable project
+-- SAMA: working Supabase Auth setup for Lovable project
 -- Run this in Supabase Dashboard -> SQL Editor -> New Query -> Run.
 
 -- 1) Make sure enums exist

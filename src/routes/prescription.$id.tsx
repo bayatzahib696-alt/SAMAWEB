@@ -56,7 +56,7 @@ function PrescriptionPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Visit Summary & Prescription</CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">Afghan Telehealth</p>
+                <p className="mt-1 text-sm text-muted-foreground">SAMA</p>
               </div>
               <div className="text-right text-xs text-muted-foreground">
                 <div>Date: {new Date(rx.created_at).toLocaleDateString()}</div>
@@ -88,3 +88,4 @@ function Block({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

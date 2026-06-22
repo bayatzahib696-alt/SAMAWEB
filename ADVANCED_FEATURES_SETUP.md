@@ -1,4 +1,4 @@
-# Afghan Healthease Connect - Advanced MVP Setup
+# SAMA - Advanced MVP Setup
 
 This ZIP adds the client-requested advanced features to the Lovable/Supabase project.
 
@@ -99,3 +99,4 @@ npm run dev
 ## Important note
 
 This is an MVP-ready feature build. Image fields use image URLs. Later, you can connect Supabase Storage for real image upload buttons.
+

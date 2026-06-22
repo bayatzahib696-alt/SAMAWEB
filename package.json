@@ -1,5 +1,5 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "sama",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -86,3 +86,5 @@
     "vite": "^7.3.1"
   }
 }
+
+

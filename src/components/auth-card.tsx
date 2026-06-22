@@ -117,7 +117,7 @@ export function AuthCard({ role, title, subtitle, allowSignup = true }: AuthCard
           <div className="grid h-10 w-10 place-items-center rounded-lg gradient-medical">
             <Stethoscope className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold tracking-tight">Afghan Telehealth</span>
+          <span className="text-lg font-bold tracking-tight">SAMA</span>
         </div>
         <Card>
           <CardHeader>
@@ -210,3 +210,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+

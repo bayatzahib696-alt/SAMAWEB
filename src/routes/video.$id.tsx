@@ -42,7 +42,7 @@ function VideoCall() {
       <header className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
           <Stethoscope className="h-5 w-5" />
-          <span className="font-bold">Afghan Telehealth — Video Consultation</span>
+          <span className="font-bold">SAMA — Video Consultation</span>
         </div>
         <div className="text-sm opacity-70">{data.appointment_date} {data.appointment_time?.toString().slice(0, 5)}</div>
       </header>
@@ -88,3 +88,4 @@ function VideoTile({ name, role, muted, camOn = true, you }: { name: string; rol
     </div>
   );
 }
+

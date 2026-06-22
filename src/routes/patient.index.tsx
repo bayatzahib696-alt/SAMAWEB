@@ -89,3 +89,4 @@ function QuickLink({ to, icon: Icon, label }: { to: string; icon: typeof Search;
     </Link>
   );
 }
+

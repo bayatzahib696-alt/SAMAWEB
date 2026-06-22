@@ -70,3 +70,4 @@ function DocRow({ d, onApprove, onReject }: { d: any; onApprove?: () => void; on
     </CardContent></Card>
   );
 }
+

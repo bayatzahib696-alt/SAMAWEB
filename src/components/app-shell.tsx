@@ -43,7 +43,7 @@ export function AppShell({ children, requiredRole, nav = [], title }: AppShellPr
             <div className="grid h-9 w-9 place-items-center rounded-lg gradient-medical">
               <Stethoscope className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold tracking-tight">Afghan Telehealth</span>
+            <span className="text-lg font-bold tracking-tight">SAMA</span>
           </Link>
           <nav className="hidden gap-1 md:flex">
             {nav.map((n) => (
@@ -81,3 +81,4 @@ export function AppShell({ children, requiredRole, nav = [], title }: AppShellPr
     </div>
   );
 }
+

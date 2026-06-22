@@ -55,3 +55,4 @@ export function useAuth() {
 
   return { user, session, role, loading, signOut };
 }
+

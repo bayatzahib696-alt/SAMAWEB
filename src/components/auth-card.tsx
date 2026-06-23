@@ -160,7 +160,7 @@ export function AuthCard({
       }
 
       window.localStorage.setItem(ROLE_KEY, role);
-      window.location.href = dashboardFor(role);
+      window.location.href = "/";
     } catch (err: any) {
       console.error("Signup error:", err);
       setLoading(false);

@@ -25,31 +25,34 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    let alive = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
+    async function load() {
+      try {
+        const { data } = await supabase.auth.getSession();
 
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setRole(getStoredRole());
-      setLoading(false);
-    });
+        if (!alive) return;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (!mounted) return;
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        setRole(getStoredRole());
+        setLoading(false);
+      } catch (error) {
+        console.error("Auth session error:", error);
 
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      setRole(getStoredRole());
-      setLoading(false);
-    });
+        if (!alive) return;
+
+        setSession(null);
+        setUser(null);
+        setRole(null);
+        setLoading(false);
+      }
+    }
+
+    load();
 
     return () => {
-      mounted = false;
-      subscription.unsubscribe();
+      alive = false;
     };
   }, []);
 

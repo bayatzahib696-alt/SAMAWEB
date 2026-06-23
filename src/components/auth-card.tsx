@@ -32,17 +32,21 @@ interface AuthCardProps {
 }
 
 const ROLE_KEY = "sama_role";
-const USER_KEY = "sama_user_id";
+
+function dashboardFor(role: AppRole) {
+  return `/${role}`;
+}
 
 async function withTimeout<T>(
   promise: Promise<T>,
-  ms = 15000,
-  message = "Request timed out"
+  ms = 15000
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
 
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(message)), ms);
+    timer = setTimeout(() => {
+      reject(new Error("Request timed out. Please try again."));
+    }, ms);
   });
 
   try {
@@ -50,20 +54,6 @@ async function withTimeout<T>(
   } finally {
     clearTimeout(timer!);
   }
-}
-
-function saveRole(role: AppRole, userId: string) {
-  window.localStorage.setItem(ROLE_KEY, role);
-  window.localStorage.setItem(USER_KEY, userId);
-}
-
-function clearRole() {
-  window.localStorage.removeItem(ROLE_KEY);
-  window.localStorage.removeItem(USER_KEY);
-}
-
-function dashboardFor(role: AppRole) {
-  return `/${role}`;
 }
 
 export function AuthCard({
@@ -96,26 +86,17 @@ export function AuthCard({
     const cleanEmail = loginEmail.trim().toLowerCase();
 
     if (!cleanEmail || !loginPwd) {
-      return toast.error("Please enter email and password.");
+      return toast.error("Please enter your email and password.");
     }
 
     setLoading(true);
-    clearRole();
 
     try {
-      await withTimeout(
-        supabase.auth.signOut(),
-        10000,
-        "Previous session cleanup timed out"
-      );
-
-      const { data, error } = await withTimeout(
+      const { error } = await withTimeout(
         supabase.auth.signInWithPassword({
           email: cleanEmail,
           password: loginPwd,
-        }),
-        15000,
-        "Login timed out. Check internet or Supabase settings."
+        })
       );
 
       if (error) {
@@ -123,51 +104,12 @@ export function AuthCard({
         return toast.error(error.message);
       }
 
-      const userId = data.user?.id;
-
-      if (!userId) {
-        setLoading(false);
-        return toast.error("Login failed. User ID missing.");
-      }
-
-      const { data: roleRow, error: roleError } = await withTimeout(
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .maybeSingle(),
-        15000,
-        "Role check timed out."
-      );
-
-      if (roleError) {
-        console.error("Role check error:", roleError);
-        await supabase.auth.signOut();
-        clearRole();
-        setLoading(false);
-        return toast.error("Could not check account role.");
-      }
-
-      if (!roleRow || roleRow.role !== role) {
-        await supabase.auth.signOut();
-        clearRole();
-        setLoading(false);
-        return toast.error(`This account is not a ${role} account.`);
-      }
-
-      saveRole(role, userId);
-
-      toast.success("Login successful.");
-
-      setTimeout(() => {
-        window.location.replace(dashboardFor(role));
-      }, 300);
+      window.localStorage.setItem(ROLE_KEY, role);
+      window.location.href = dashboardFor(role);
     } catch (err: any) {
-      console.error("Login crash:", err);
-      clearRole();
-      await supabase.auth.signOut();
+      console.error("Login error:", err);
       setLoading(false);
-      toast.error(err?.message || "Login failed. Please try again.");
+      toast.error(err?.message || "Login failed.");
     }
   };
 
@@ -187,10 +129,9 @@ export function AuthCard({
     }
 
     setLoading(true);
-    clearRole();
 
     try {
-      const { data, error } = await withTimeout(
+      const { error } = await withTimeout(
         supabase.auth.signUp({
           email: email.trim().toLowerCase(),
           password: pwd,
@@ -210,9 +151,7 @@ export function AuthCard({
                 : {}),
             },
           },
-        }),
-        15000,
-        "Signup timed out."
+        })
       );
 
       if (error) {
@@ -220,25 +159,12 @@ export function AuthCard({
         return toast.error(error.message);
       }
 
-      const userId = data.user?.id;
-
-      if (!userId) {
-        setLoading(false);
-        return toast.error("Signup failed. User ID missing.");
-      }
-
-      saveRole(role, userId);
-
-      toast.success("Account created.");
-
-      setTimeout(() => {
-        window.location.replace(dashboardFor(role));
-      }, 500);
+      window.localStorage.setItem(ROLE_KEY, role);
+      window.location.href = dashboardFor(role);
     } catch (err: any) {
-      console.error("Signup crash:", err);
-      clearRole();
+      console.error("Signup error:", err);
       setLoading(false);
-      toast.error(err?.message || "Signup failed. Please try again.");
+      toast.error(err?.message || "Signup failed.");
     }
   };
 

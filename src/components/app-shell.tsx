@@ -22,12 +22,7 @@ export function AppShell({
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="mt-4 text-sm text-muted-foreground">
-            Loading your account...
-          </p>
-        </div>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -36,7 +31,7 @@ export function AppShell({
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-muted-foreground">You are not logged in.</p>
+          <p className="text-muted-foreground">Please login first.</p>
           <Button className="mt-4" onClick={() => (window.location.href = "/")}>
             Go home
           </Button>
@@ -51,7 +46,7 @@ export function AppShell({
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold">Wrong account type</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            This account is logged in, but it is not a {requiredRole} account.
+            This page is for {requiredRole} accounts only.
           </p>
           <Button onClick={signOut} className="mt-5">
             Sign out

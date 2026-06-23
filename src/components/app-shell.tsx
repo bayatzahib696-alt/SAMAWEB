@@ -1,9 +1,8 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Stethoscope, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
 
 interface AppShellProps {
   children: ReactNode;
@@ -19,19 +18,10 @@ export function AppShell({
   title,
 }: AppShellProps) {
   const { user, role, loading, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (!user) {
-      navigate({ to: "/" });
-    }
-  }, [loading, user, navigate]);
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center px-4">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="mt-4 text-sm text-muted-foreground">
@@ -44,8 +34,13 @@ export function AppShell({
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Redirecting...</p>
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-muted-foreground">You are not logged in.</p>
+          <Button className="mt-4" onClick={() => (window.location.href = "/")}>
+            Go home
+          </Button>
+        </div>
       </div>
     );
   }
@@ -56,8 +51,7 @@ export function AppShell({
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold">Wrong account type</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            This account is not a {requiredRole} account. Please sign out and
-            login with the correct account.
+            This account is logged in, but it is not a {requiredRole} account.
           </p>
           <Button onClick={signOut} className="mt-5">
             Sign out

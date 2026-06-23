@@ -31,6 +31,41 @@ interface AuthCardProps {
   allowSignup?: boolean;
 }
 
+const ROLE_KEY = "sama_role";
+const USER_KEY = "sama_user_id";
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms = 15000,
+  message = "Request timed out"
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
+function saveRole(role: AppRole, userId: string) {
+  window.localStorage.setItem(ROLE_KEY, role);
+  window.localStorage.setItem(USER_KEY, userId);
+}
+
+function clearRole() {
+  window.localStorage.removeItem(ROLE_KEY);
+  window.localStorage.removeItem(USER_KEY);
+}
+
+function dashboardFor(role: AppRole) {
+  return `/${role}`;
+}
+
 export function AuthCard({
   role,
   title,
@@ -39,88 +74,107 @@ export function AuthCard({
 }: AuthCardProps) {
   const [loading, setLoading] = useState(false);
 
-  // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPwd, setLoginPwd] = useState("");
 
-  // Signup state
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [cpwd, setCpwd] = useState("");
 
-  // Doctor signup fields
   const [specialty, setSpecialty] = useState<string>(SPECIALTIES[0]);
   const [licenseNumber, setLicenseNumber] = useState("");
   const [yearsExperience, setYearsExperience] = useState("");
   const [consultationFee, setConsultationFee] = useState("");
 
-  const dashboardFor = (r: AppRole) => `/${r}`;
-
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!loginEmail || !loginPwd) {
-      return toast.error("Please enter your email and password.");
+    if (loading) return;
+
+    const cleanEmail = loginEmail.trim().toLowerCase();
+
+    if (!cleanEmail || !loginPwd) {
+      return toast.error("Please enter email and password.");
     }
 
     setLoading(true);
+    clearRole();
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail.trim(),
-        password: loginPwd,
-      });
+      await withTimeout(
+        supabase.auth.signOut(),
+        10000,
+        "Previous session cleanup timed out"
+      );
+
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: loginPwd,
+        }),
+        15000,
+        "Login timed out. Check internet or Supabase settings."
+      );
 
       if (error) {
-        toast.error(error.message);
         setLoading(false);
-        return;
+        return toast.error(error.message);
       }
 
       const userId = data.user?.id;
 
       if (!userId) {
-        toast.error("Login failed. Please try again.");
         setLoading(false);
-        return;
+        return toast.error("Login failed. User ID missing.");
       }
 
-      const { data: roleRow, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const { data: roleRow, error: roleError } = await withTimeout(
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        15000,
+        "Role check timed out."
+      );
 
       if (roleError) {
         console.error("Role check error:", roleError);
         await supabase.auth.signOut();
-        toast.error("Could not check your account role. Please try again.");
+        clearRole();
         setLoading(false);
-        return;
+        return toast.error("Could not check account role.");
       }
 
       if (!roleRow || roleRow.role !== role) {
         await supabase.auth.signOut();
-        toast.error(`This account is not a ${role} account.`);
+        clearRole();
         setLoading(false);
-        return;
+        return toast.error(`This account is not a ${role} account.`);
       }
 
-      toast.success("Welcome back!");
+      saveRole(role, userId);
 
-      // Use full page redirect online to avoid route freeze after login
-      window.location.href = dashboardFor(role);
-    } catch (err) {
+      toast.success("Login successful.");
+
+      setTimeout(() => {
+        window.location.replace(dashboardFor(role));
+      }, 300);
+    } catch (err: any) {
       console.error("Login crash:", err);
-      toast.error("Something went wrong during login.");
+      clearRole();
+      await supabase.auth.signOut();
       setLoading(false);
+      toast.error(err?.message || "Login failed. Please try again.");
     }
   };
 
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (loading) return;
 
     if (!fullName.trim()) return toast.error("Please enter your full name.");
     if (!email.trim()) return toast.error("Please enter your email.");
@@ -133,57 +187,58 @@ export function AuthCard({
     }
 
     setLoading(true);
+    clearRole();
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: pwd,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            full_name: fullName.trim(),
-            phone: phone.trim(),
-            role,
-            ...(role === "doctor"
-              ? {
-                  specialty,
-                  license_number: licenseNumber.trim(),
-                  years_experience: yearsExperience || "0",
-                  consultation_fee: consultationFee || "0",
-                }
-              : {}),
+      const { data, error } = await withTimeout(
+        supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password: pwd,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: {
+              full_name: fullName.trim(),
+              phone: phone.trim(),
+              role,
+              ...(role === "doctor"
+                ? {
+                    specialty,
+                    license_number: licenseNumber.trim(),
+                    years_experience: yearsExperience || "0",
+                    consultation_fee: consultationFee || "0",
+                  }
+                : {}),
+            },
           },
-        },
-      });
+        }),
+        15000,
+        "Signup timed out."
+      );
 
       if (error) {
-        toast.error(error.message);
         setLoading(false);
-        return;
+        return toast.error(error.message);
       }
 
-      const uid = data.user?.id;
+      const userId = data.user?.id;
 
-      if (!uid) {
-        toast.error("Sign up failed.");
+      if (!userId) {
         setLoading(false);
-        return;
+        return toast.error("Signup failed. User ID missing.");
       }
 
-      if (role === "doctor") {
-        toast.success(
-          "Doctor account created! Your account may need admin approval."
-        );
-      } else {
-        toast.success("Account created!");
-      }
+      saveRole(role, userId);
 
-      // Use full page redirect online to avoid route freeze after signup
-      window.location.href = dashboardFor(role);
-    } catch (err) {
+      toast.success("Account created.");
+
+      setTimeout(() => {
+        window.location.replace(dashboardFor(role));
+      }, 500);
+    } catch (err: any) {
       console.error("Signup crash:", err);
-      toast.error("Something went wrong during signup.");
+      clearRole();
       setLoading(false);
+      toast.error(err?.message || "Signup failed. Please try again.");
     }
   };
 
@@ -309,7 +364,7 @@ export function AuthCard({
                         </Field>
 
                         <div className="grid grid-cols-2 gap-3">
-                          <Field label="Years of experience">
+                          <Field label="Years">
                             <Input
                               type="number"
                               min="0"
@@ -320,7 +375,7 @@ export function AuthCard({
                             />
                           </Field>
 
-                          <Field label="Consultation fee">
+                          <Field label="Fee">
                             <Input
                               type="number"
                               min="0"

@@ -27,7 +27,7 @@ export function useAuth() {
   useEffect(() => {
     let alive = true;
 
-    async function load() {
+    async function loadSession() {
       try {
         const { data } = await supabase.auth.getSession();
 
@@ -36,20 +36,20 @@ export function useAuth() {
         setSession(data.session);
         setUser(data.session?.user ?? null);
         setRole(getStoredRole());
-        setLoading(false);
       } catch (error) {
-        console.error("Auth session error:", error);
+        console.error("Auth session load error:", error);
 
         if (!alive) return;
 
         setSession(null);
         setUser(null);
         setRole(null);
-        setLoading(false);
+      } finally {
+        if (alive) setLoading(false);
       }
     }
 
-    load();
+    loadSession();
 
     return () => {
       alive = false;

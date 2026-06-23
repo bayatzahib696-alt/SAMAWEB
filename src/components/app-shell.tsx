@@ -22,7 +22,12 @@ export function AppShell({
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="mt-4 text-sm text-muted-foreground">
+            Loading account...
+          </p>
+        </div>
       </div>
     );
   }
@@ -30,9 +35,12 @@ export function AppShell({
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-muted-foreground">Please login first.</p>
-          <Button className="mt-4" onClick={() => (window.location.href = "/")}>
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold">Please login first</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your login session was not found.
+          </p>
+          <Button className="mt-5" onClick={() => (window.location.href = "/")}>
             Go home
           </Button>
         </div>
@@ -40,7 +48,7 @@ export function AppShell({
     );
   }
 
-  if (requiredRole && role !== requiredRole) {
+  if (requiredRole && role && role !== requiredRole) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md text-center">
@@ -54,6 +62,10 @@ export function AppShell({
         </div>
       </div>
     );
+  }
+
+  if (requiredRole && !role) {
+    window.localStorage.setItem("sama_role", requiredRole);
   }
 
   return (

@@ -1,437 +1,127 @@
-import { useState, type FormEvent } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { AppRole } from "@/hooks/use-auth";
-import { SPECIALTIES } from "@/lib/constants";
+import { Link } from "@tanstack/react-router";
+import { useAuth, type AppRole } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Stethoscope, LogOut } from "lucide-react";
+import type { ReactNode } from "react";
 
-interface AuthCardProps {
-  role: AppRole;
+interface AppShellProps {
+  children: ReactNode;
+  requiredRole?: AppRole;
+  nav?: { to: string; label: string }[];
   title: string;
-  subtitle: string;
-  allowSignup?: boolean;
 }
 
-const ROLE_KEY = "sama_role";
-
-function dashboardFor(role: AppRole) {
-  return `/${role}`;
-}
-
-async function withTimeout<T>(promise: Promise<T>, ms = 15000): Promise<T> {
-  let timer: ReturnType<typeof setTimeout>;
-
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error("Request timed out. Please try again."));
-    }, ms);
-  });
-
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    clearTimeout(timer!);
-  }
-}
-
-export function AuthCard({
-  role,
+export function AppShell({
+  children,
+  requiredRole,
+  nav = [],
   title,
-  subtitle,
-  allowSignup = true,
-}: AuthCardProps) {
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+}: AppShellProps) {
+  const { user, role, loading, signOut } = useAuth();
 
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPwd, setLoginPwd] = useState("");
-
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [pwd, setPwd] = useState("");
-  const [cpwd, setCpwd] = useState("");
-
-  const [specialty, setSpecialty] = useState<string>(SPECIALTIES[0] || "General Physician");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [yearsExperience, setYearsExperience] = useState("");
-  const [consultationFee, setConsultationFee] = useState("");
-
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault();
-
-    if (loading) return;
-
-    const cleanEmail = loginEmail.trim().toLowerCase();
-
-    if (!cleanEmail || !loginPwd) {
-      setMessage("Please enter your email and password.");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("Signing in...");
-
-    try {
-      const { error } = await withTimeout(
-        supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: loginPwd,
-        })
-      );
-
-      if (error) {
-        setLoading(false);
-        setMessage(error.message);
-        return;
-      }
-
-      window.localStorage.setItem(ROLE_KEY, role);
-      window.location.href = dashboardFor(role);
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setLoading(false);
-      setMessage(err?.message || "Login failed. Please try again.");
-    }
-  };
-
-  const handleSignup = async (e: FormEvent) => {
-    e.preventDefault();
-
-    if (loading) return;
-
-    if (!fullName.trim()) {
-      setMessage("Please enter your full name.");
-      return;
-    }
-
-    if (!email.trim()) {
-      setMessage("Please enter your email.");
-      return;
-    }
-
-    if (pwd !== cpwd) {
-      setMessage("Passwords do not match.");
-      return;
-    }
-
-    if (pwd.length < 6) {
-      setMessage("Password must be at least 6 characters.");
-      return;
-    }
-
-    if (role === "doctor" && (!licenseNumber.trim() || !consultationFee)) {
-      setMessage("Please fill in all doctor details.");
-      return;
-    }
-
-    setLoading(true);
-    setMessage("Creating account...");
-
-    try {
-      const { error } = await withTimeout(
-        supabase.auth.signUp({
-          email: email.trim().toLowerCase(),
-          password: pwd,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: {
-              full_name: fullName.trim(),
-              phone: phone.trim(),
-              role,
-              ...(role === "doctor"
-                ? {
-                    specialty,
-                    license_number: licenseNumber.trim(),
-                    years_experience: yearsExperience || "0",
-                    consultation_fee: consultationFee || "0",
-                  }
-                : {}),
-            },
-          },
-        })
-      );
-
-      if (error) {
-        setLoading(false);
-        setMessage(error.message);
-        return;
-      }
-
-      window.localStorage.setItem(ROLE_KEY, role);
-      window.location.href = dashboardFor(role);
-    } catch (err: any) {
-      console.error("Signup error:", err);
-      setLoading(false);
-      setMessage(err?.message || "Signup failed. Please try again.");
-    }
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", padding: "40px 16px" }}>
-      <div style={{ maxWidth: 430, margin: "0 auto" }}>
-        <a
-          href="/"
-          style={{
-            display: "inline-block",
-            marginBottom: 20,
-            color: "#475569",
-            textDecoration: "none",
-            fontSize: 14,
-          }}
-        >
-          ← Back home
-        </a>
-
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>SAMA</h1>
-          <p style={{ color: "#64748b", marginTop: 6 }}>Telehealth platform</p>
-        </div>
-
-        <div
-          style={{
-            background: "white",
-            border: "1px solid #e2e8f0",
-            borderRadius: 16,
-            padding: 24,
-            boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)",
-          }}
-        >
-          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{title}</h2>
-          <p style={{ color: "#64748b", marginTop: 8, marginBottom: 20 }}>{subtitle}</p>
-
-          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("login");
-                setMessage("");
-              }}
-              style={{
-                flex: 1,
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid #cbd5e1",
-                background: mode === "login" ? "#0f766e" : "white",
-                color: mode === "login" ? "white" : "#0f172a",
-                cursor: "pointer",
-              }}
-            >
-              Login
-            </button>
-
-            {allowSignup && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("signup");
-                  setMessage("");
-                }}
-                style={{
-                  flex: 1,
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #cbd5e1",
-                  background: mode === "signup" ? "#0f766e" : "white",
-                  color: mode === "signup" ? "white" : "#0f172a",
-                  cursor: "pointer",
-                }}
-              >
-                Sign up
-              </button>
-            )}
-          </div>
-
-          {message && (
-            <div
-              style={{
-                padding: 12,
-                borderRadius: 10,
-                background: "#fef3c7",
-                color: "#92400e",
-                marginBottom: 16,
-                fontSize: 14,
-              }}
-            >
-              {message}
-            </div>
-          )}
-
-          {mode === "login" && (
-            <form onSubmit={handleLogin}>
-              <Field label="Email">
-                <input
-                  type="email"
-                  required
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  style={inputStyle}
-                />
-              </Field>
-
-              <Field label="Password">
-                <input
-                  type="password"
-                  required
-                  value={loginPwd}
-                  onChange={(e) => setLoginPwd(e.target.value)}
-                  style={inputStyle}
-                />
-              </Field>
-
-              <button type="submit" disabled={loading} style={submitStyle}>
-                {loading ? "Signing in..." : "Sign in"}
-              </button>
-            </form>
-          )}
-
-          {mode === "signup" && allowSignup && (
-            <form onSubmit={handleSignup}>
-              <Field label="Full name">
-                <input
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  style={inputStyle}
-                />
-              </Field>
-
-              <Field label="Phone number">
-                <input
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+93 ..."
-                  style={inputStyle}
-                />
-              </Field>
-
-              <Field label="Email">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={inputStyle}
-                />
-              </Field>
-
-              {role === "doctor" && (
-                <>
-                  <Field label="Specialty">
-                    <select
-                      value={specialty}
-                      onChange={(e) => setSpecialty(e.target.value)}
-                      style={inputStyle}
-                    >
-                      {SPECIALTIES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-
-                  <Field label="Medical license number">
-                    <input
-                      required
-                      value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value)}
-                      style={inputStyle}
-                    />
-                  </Field>
-
-                  <Field label="Years of experience">
-                    <input
-                      type="number"
-                      min="0"
-                      value={yearsExperience}
-                      onChange={(e) => setYearsExperience(e.target.value)}
-                      style={inputStyle}
-                    />
-                  </Field>
-
-                  <Field label="Consultation fee">
-                    <input
-                      type="number"
-                      min="0"
-                      required
-                      value={consultationFee}
-                      onChange={(e) => setConsultationFee(e.target.value)}
-                      style={inputStyle}
-                    />
-                  </Field>
-                </>
-              )}
-
-              <Field label="Password">
-                <input
-                  type="password"
-                  required
-                  value={pwd}
-                  onChange={(e) => setPwd(e.target.value)}
-                  style={inputStyle}
-                />
-              </Field>
-
-              <Field label="Confirm password">
-                <input
-                  type="password"
-                  required
-                  value={cpwd}
-                  onChange={(e) => setCpwd(e.target.value)}
-                  style={inputStyle}
-                />
-              </Field>
-
-              <button type="submit" disabled={loading} style={submitStyle}>
-                {loading ? "Creating account..." : "Create account"}
-              </button>
-            </form>
-          )}
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="mt-4 text-sm text-muted-foreground">
+            Loading account...
+          </p>
         </div>
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold">Please login first</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Your login session was not found.
+          </p>
+          <Button className="mt-5" onClick={() => (window.location.href = "/")}>
+            Go home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (requiredRole && role && role !== requiredRole) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold">Wrong account type</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This page is for {requiredRole} accounts only.
+          </p>
+          <Button onClick={signOut} className="mt-5">
+            Sign out
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (requiredRole && !role) {
+    window.localStorage.setItem("sama_role", requiredRole);
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 border-b bg-card/80 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-lg gradient-medical">
+              <Stethoscope className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-lg font-bold tracking-tight">SAMA</span>
+          </Link>
+
+          <nav className="hidden gap-1 md:flex">
+            {nav.map((n) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                activeProps={{
+                  className: "bg-accent text-accent-foreground",
+                }}
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
+
+          <Button variant="ghost" size="sm" onClick={signOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </Button>
+        </div>
+
+        <div className="flex gap-1 overflow-x-auto border-t bg-card px-4 py-2 md:hidden">
+          {nav.map((n) => (
+            <Link
+              key={n.to}
+              to={n.to}
+              className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
+              activeProps={{
+                className: "bg-accent text-accent-foreground",
+              }}
+            >
+              {n.label}
+            </Link>
+          ))}
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        {title && (
+          <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>
+        )}
+        {children}
+      </main>
     </div>
   );
 }
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: "block", marginBottom: 14 }}>
-      <span
-        style={{
-          display: "block",
-          marginBottom: 6,
-          fontSize: 14,
-          fontWeight: 600,
-          color: "#334155",
-        }}
-      >
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "11px 12px",
-  borderRadius: 10,
-  border: "1px solid #cbd5e1",
-  fontSize: 15,
-  outline: "none",
-  boxSizing: "border-box",
-};
-
-const submitStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: 10,
-  border: "none",
-  background: "#0f766e",
-  color: "white",
-  fontSize: 15,
-  fontWeight: 700,
-  cursor: "pointer",
-  marginTop: 6,
-};

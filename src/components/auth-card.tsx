@@ -1,28 +1,7 @@
-import { useState, type FormEvent, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { toast } from "sonner";
-import { SPECIALTIES } from "@/lib/constants";
 import type { AppRole } from "@/hooks/use-auth";
-import { Stethoscope, ArrowLeft } from "lucide-react";
+import { SPECIALTIES } from "@/lib/constants";
 
 interface AuthCardProps {
   role: AppRole;
@@ -37,15 +16,12 @@ function dashboardFor(role: AppRole) {
   return `/${role}`;
 }
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  ms = 15000
-): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, ms = 15000): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
 
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
-      reject(new Error("Request timed out. Please try again."));
+      reject(new Error("Request timed out. Please check Supabase/Vercel env settings."));
     }, ms);
   });
 
@@ -62,7 +38,9 @@ export function AuthCard({
   subtitle,
   allowSignup = true,
 }: AuthCardProps) {
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPwd, setLoginPwd] = useState("");
@@ -73,23 +51,26 @@ export function AuthCard({
   const [pwd, setPwd] = useState("");
   const [cpwd, setCpwd] = useState("");
 
-  const [specialty, setSpecialty] = useState<string>(SPECIALTIES[0]);
+  const [specialty, setSpecialty] = useState<string>(
+    SPECIALTIES[0] || "General Physician"
+  );
   const [licenseNumber, setLicenseNumber] = useState("");
   const [yearsExperience, setYearsExperience] = useState("");
   const [consultationFee, setConsultationFee] = useState("");
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-
     if (loading) return;
 
     const cleanEmail = loginEmail.trim().toLowerCase();
 
     if (!cleanEmail || !loginPwd) {
-      return toast.error("Please enter your email and password.");
+      setMessage("Please enter your email and password.");
+      return;
     }
 
     setLoading(true);
+    setMessage("Signing in...");
 
     try {
       const { error } = await withTimeout(
@@ -101,34 +82,34 @@ export function AuthCard({
 
       if (error) {
         setLoading(false);
-        return toast.error(error.message);
+        setMessage(error.message);
+        return;
       }
 
       window.localStorage.setItem(ROLE_KEY, role);
-      window.location.href = dashboardFor(role);
+      window.location.assign(dashboardFor(role));
     } catch (err: any) {
       console.error("Login error:", err);
       setLoading(false);
-      toast.error(err?.message || "Login failed.");
+      setMessage(err?.message || "Login failed. Please try again.");
     }
   };
 
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
-
     if (loading) return;
 
-    if (!fullName.trim()) return toast.error("Please enter your full name.");
-    if (!email.trim()) return toast.error("Please enter your email.");
-    if (pwd !== cpwd) return toast.error("Passwords do not match.");
-    if (pwd.length < 6)
-      return toast.error("Password must be at least 6 characters.");
+    if (!fullName.trim()) return setMessage("Please enter your full name.");
+    if (!email.trim()) return setMessage("Please enter your email.");
+    if (pwd !== cpwd) return setMessage("Passwords do not match.");
+    if (pwd.length < 6) return setMessage("Password must be at least 6 characters.");
 
     if (role === "doctor" && (!licenseNumber.trim() || !consultationFee)) {
-      return toast.error("Please fill in all doctor details.");
+      return setMessage("Please fill in all doctor details.");
     }
 
     setLoading(true);
+    setMessage("Creating account...");
 
     try {
       const { error } = await withTimeout(
@@ -156,203 +137,159 @@ export function AuthCard({
 
       if (error) {
         setLoading(false);
-        return toast.error(error.message);
+        setMessage(error.message);
+        return;
       }
 
       window.localStorage.setItem(ROLE_KEY, role);
-      window.location.href = "/";
+      window.location.assign(dashboardFor(role));
     } catch (err: any) {
       console.error("Signup error:", err);
       setLoading(false);
-      toast.error(err?.message || "Signup failed.");
+      setMessage(err?.message || "Signup failed. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-md px-4 py-10">
-        <Link
-          to="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back home
-        </Link>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", padding: "40px 16px" }}>
+      <div style={{ maxWidth: 430, margin: "0 auto" }}>
+        <a href="/" style={{ display: "inline-block", marginBottom: 20, color: "#475569", textDecoration: "none", fontSize: 14 }}>
+          ← Back home
+        </a>
 
-        <div className="mb-6 flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-lg gradient-medical">
-            <Stethoscope className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold tracking-tight">SAMA</span>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>SAMA</h1>
+          <p style={{ color: "#64748b", marginTop: 6 }}>Telehealth platform</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{subtitle}</CardDescription>
-          </CardHeader>
+        <div style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: 16, padding: 24, boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)" }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{title}</h2>
+          <p style={{ color: "#64748b", marginTop: 8, marginBottom: 20 }}>{subtitle}</p>
 
-          <CardContent>
-            <Tabs defaultValue="login">
-              <TabsList
-                className={
-                  allowSignup
-                    ? "grid w-full grid-cols-2"
-                    : "grid w-full grid-cols-1"
-                }
-              >
-                <TabsTrigger value="login">Login</TabsTrigger>
-                {allowSignup && (
-                  <TabsTrigger value="signup">Sign up</TabsTrigger>
-                )}
-              </TabsList>
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            <button type="button" onClick={() => { setMode("login"); setMessage(""); }} style={tabStyle(mode === "login")}>
+              Login
+            </button>
+            {allowSignup && (
+              <button type="button" onClick={() => { setMode("signup"); setMessage(""); }} style={tabStyle(mode === "signup")}>
+                Sign up
+              </button>
+            )}
+          </div>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4 pt-4">
-                  <Field label="Email">
-                    <Input
-                      type="email"
-                      required
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                    />
+          {message && <div style={messageStyle}>{message}</div>}
+
+          {mode === "login" && (
+            <form onSubmit={handleLogin}>
+              <Field label="Email">
+                <input type="email" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} style={inputStyle} />
+              </Field>
+              <Field label="Password">
+                <input type="password" required value={loginPwd} onChange={(e) => setLoginPwd(e.target.value)} style={inputStyle} />
+              </Field>
+              <button type="submit" disabled={loading} style={submitStyle}>
+                {loading ? "Signing in..." : "Sign in"}
+              </button>
+            </form>
+          )}
+
+          {mode === "signup" && allowSignup && (
+            <form onSubmit={handleSignup}>
+              <Field label="Full name">
+                <input required value={fullName} onChange={(e) => setFullName(e.target.value)} style={inputStyle} />
+              </Field>
+              <Field label="Phone number">
+                <input required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+93 ..." style={inputStyle} />
+              </Field>
+              <Field label="Email">
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+              </Field>
+
+              {role === "doctor" && (
+                <>
+                  <Field label="Specialty">
+                    <select value={specialty} onChange={(e) => setSpecialty(e.target.value)} style={inputStyle}>
+                      {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </Field>
-
-                  <Field label="Password">
-                    <Input
-                      type="password"
-                      required
-                      value={loginPwd}
-                      onChange={(e) => setLoginPwd(e.target.value)}
-                    />
+                  <Field label="Medical license number">
+                    <input required value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} style={inputStyle} />
                   </Field>
-
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign in"}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              {allowSignup && (
-                <TabsContent value="signup">
-                  <form onSubmit={handleSignup} className="space-y-4 pt-4">
-                    <Field label="Full name">
-                      <Input
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                      />
-                    </Field>
-
-                    <Field label="Phone number">
-                      <Input
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+93 ..."
-                      />
-                    </Field>
-
-                    <Field label="Email">
-                      <Input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </Field>
-
-                    {role === "doctor" && (
-                      <>
-                        <Field label="Specialty">
-                          <Select value={specialty} onValueChange={setSpecialty}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {SPECIALTIES.map((s) => (
-                                <SelectItem key={s} value={s}>
-                                  {s}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </Field>
-
-                        <Field label="Medical license number">
-                          <Input
-                            required
-                            value={licenseNumber}
-                            onChange={(e) =>
-                              setLicenseNumber(e.target.value)
-                            }
-                          />
-                        </Field>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <Field label="Years">
-                            <Input
-                              type="number"
-                              min="0"
-                              value={yearsExperience}
-                              onChange={(e) =>
-                                setYearsExperience(e.target.value)
-                              }
-                            />
-                          </Field>
-
-                          <Field label="Fee">
-                            <Input
-                              type="number"
-                              min="0"
-                              required
-                              value={consultationFee}
-                              onChange={(e) =>
-                                setConsultationFee(e.target.value)
-                              }
-                            />
-                          </Field>
-                        </div>
-                      </>
-                    )}
-
-                    <Field label="Password">
-                      <Input
-                        type="password"
-                        required
-                        value={pwd}
-                        onChange={(e) => setPwd(e.target.value)}
-                      />
-                    </Field>
-
-                    <Field label="Confirm password">
-                      <Input
-                        type="password"
-                        required
-                        value={cpwd}
-                        onChange={(e) => setCpwd(e.target.value)}
-                      />
-                    </Field>
-
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? "Creating account..." : "Create account"}
-                    </Button>
-                  </form>
-                </TabsContent>
+                  <Field label="Years of experience">
+                    <input type="number" min="0" value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} style={inputStyle} />
+                  </Field>
+                  <Field label="Consultation fee">
+                    <input type="number" min="0" required value={consultationFee} onChange={(e) => setConsultationFee(e.target.value)} style={inputStyle} />
+                  </Field>
+                </>
               )}
-            </Tabs>
-          </CardContent>
-        </Card>
+
+              <Field label="Password">
+                <input type="password" required value={pwd} onChange={(e) => setPwd(e.target.value)} style={inputStyle} />
+              </Field>
+              <Field label="Confirm password">
+                <input type="password" required value={cpwd} onChange={(e) => setCpwd(e.target.value)} style={inputStyle} />
+              </Field>
+              <button type="submit" disabled={loading} style={submitStyle}>
+                {loading ? "Creating account..." : "Create account"}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-1.5">
-      <Label className="text-sm">{label}</Label>
+    <label style={{ display: "block", marginBottom: 14 }}>
+      <span style={{ display: "block", marginBottom: 6, fontSize: 14, fontWeight: 600, color: "#334155" }}>{label}</span>
       {children}
-    </div>
+    </label>
   );
 }
+
+function tabStyle(active: boolean): React.CSSProperties {
+  return {
+    flex: 1,
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    background: active ? "#0f766e" : "white",
+    color: active ? "white" : "#0f172a",
+    cursor: "pointer",
+  };
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "11px 12px",
+  borderRadius: 10,
+  border: "1px solid #cbd5e1",
+  fontSize: 15,
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+const submitStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 10,
+  border: "none",
+  background: "#0f766e",
+  color: "white",
+  fontSize: 15,
+  fontWeight: 700,
+  cursor: "pointer",
+  marginTop: 6,
+};
+
+const messageStyle: React.CSSProperties = {
+  padding: 12,
+  borderRadius: 10,
+  background: "#fef3c7",
+  color: "#92400e",
+  marginBottom: 16,
+  fontSize: 14,
+};

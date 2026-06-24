@@ -24,9 +24,7 @@ export function AppShell({
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="mt-4 text-sm text-muted-foreground">
-            Loading account...
-          </p>
+          <p className="mt-4 text-sm text-muted-foreground">Loading account...</p>
         </div>
       </div>
     );
@@ -37,12 +35,8 @@ export function AppShell({
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold">Please login first</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your login session was not found.
-          </p>
-          <Button className="mt-5" onClick={() => (window.location.href = "/")}>
-            Go home
-          </Button>
+          <p className="mt-2 text-sm text-muted-foreground">Your login session was not found.</p>
+          <Button className="mt-5" onClick={() => (window.location.href = "/")}>Go home</Button>
         </div>
       </div>
     );
@@ -53,19 +47,11 @@ export function AppShell({
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold">Wrong account type</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This page is for {requiredRole} accounts only.
-          </p>
-          <Button onClick={signOut} className="mt-5">
-            Sign out
-          </Button>
+          <p className="mt-2 text-sm text-muted-foreground">This page is for {requiredRole} accounts only.</p>
+          <Button onClick={signOut} className="mt-5">Sign out</Button>
         </div>
       </div>
     );
-  }
-
-  if (requiredRole && !role) {
-    window.localStorage.setItem("sama_role", requiredRole);
   }
 
   return (
@@ -85,9 +71,7 @@ export function AppShell({
                 key={n.to}
                 to={n.to}
                 className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                activeProps={{
-                  className: "bg-accent text-accent-foreground",
-                }}
+                activeProps={{ className: "bg-accent text-accent-foreground" }}
               >
                 {n.label}
               </Link>
@@ -106,9 +90,7 @@ export function AppShell({
               key={n.to}
               to={n.to}
               className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
-              activeProps={{
-                className: "bg-accent text-accent-foreground",
-              }}
+              activeProps={{ className: "bg-accent text-accent-foreground" }}
             >
               {n.label}
             </Link>
@@ -117,9 +99,7 @@ export function AppShell({
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        {title && (
-          <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>
-        )}
+        {title && <h1 className="mb-6 text-3xl font-bold tracking-tight">{title}</h1>}
         {children}
       </main>
     </div>

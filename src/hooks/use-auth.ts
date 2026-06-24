@@ -8,14 +8,21 @@ const ROLE_KEY = "sama_role";
 
 function getStoredRole(): AppRole | null {
   if (typeof window === "undefined") return null;
-
   const role = window.localStorage.getItem(ROLE_KEY);
-
-  if (role === "patient" || role === "doctor" || role === "admin") {
-    return role;
-  }
-
+  if (role === "patient" || role === "doctor" || role === "admin") return role;
   return null;
+}
+
+async function withTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("Session check timed out")), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
 }
 
 export function useAuth() {
@@ -29,21 +36,17 @@ export function useAuth() {
 
     async function loadSession() {
       try {
-        const { data } = await supabase.auth.getSession();
-
+        const { data } = await withTimeout(supabase.auth.getSession());
         if (!alive) return;
-
         setSession(data.session);
         setUser(data.session?.user ?? null);
         setRole(getStoredRole());
       } catch (error) {
         console.error("Auth session load error:", error);
-
         if (!alive) return;
-
         setSession(null);
         setUser(null);
-        setRole(null);
+        setRole(getStoredRole());
       } finally {
         if (alive) setLoading(false);
       }
@@ -62,11 +65,5 @@ export function useAuth() {
     window.location.href = "/";
   };
 
-  return {
-    user,
-    session,
-    role,
-    loading,
-    signOut,
-  };
+  return { user, session, role, loading, signOut };
 }

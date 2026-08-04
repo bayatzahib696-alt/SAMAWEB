@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
+import { GlobalLanguageButton, LanguageProvider } from "@/lib/language";
 
 function NotFoundComponent() {
   return (
@@ -79,15 +80,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SAMA" },
-      { name: "description", content: "SAMA connects patients with doctors for remote video consultations and prescription summaries." },
-      { name: "author", content: "Lovable" },
+      { name: "description", content: "SAMA helps patients find doctors, book appointments, and manage care online." },
+      { name: "author", content: "SAMA" },
       { property: "og:title", content: "SAMA" },
-      { property: "og:description", content: "SAMA connects patients with doctors for remote video consultations and prescription summaries." },
+      { property: "og:description", content: "SAMA helps patients find doctors, book appointments, and manage care online." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@SAMA" },
       { name: "twitter:title", content: "SAMA" },
-      { name: "twitter:description", content: "SAMA connects patients with doctors for remote video consultations and prescription summaries." },
+      { name: "twitter:description", content: "SAMA helps patients find doctors, book appointments, and manage care online." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/351e3a57-e39d-46b5-8fac-145d3d9925c6/id-preview-a9c461bb--93188623-ef09-4703-84b4-b04657a194a4.lovable.app-1781017545183.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/351e3a57-e39d-46b5-8fac-145d3d9925c6/id-preview-a9c461bb--93188623-ef09-4703-84b4-b04657a194a4.lovable.app-1781017545183.png" },
     ],
@@ -122,10 +123,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster richColors position="top-center" />
-    </QueryClientProvider>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+        <Toaster richColors position="top-center" />
+        <GlobalLanguageButton />
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }
 
